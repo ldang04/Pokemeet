@@ -53,7 +53,7 @@ body {
 
 /* Pokemon button styling */
 .pokemon-button {
-  background: linear-gradient(135deg, var(--pokemon-blue), var(--pokemon-yellow));
+  background: linear-gradient(135deg, var(--pokemon-green), var(--pokemon-yellow));
   border: 3px solid #1e293b;
   border-radius: 25px;
   padding: 12px 24px;
