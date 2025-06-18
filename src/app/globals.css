@@ -3,13 +3,20 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --pokemon-blue: #3b82f6;
+  --pokemon-yellow: #fbbf24;
+  --pokemon-red: #ef4444;
+  --pokemon-green: #10b981;
+  --dialogue-bg: #f8fafc;
+  --dialogue-border: #1e293b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-pixelify-sans);
+  --font-mono: var(--font-pixelify-sans);
+  --font-retro: var(--font-orbitron);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +29,60 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-pixelify-sans), monospace;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Pokemon-themed dialogue box styling */
+.dialogue-box {
+  background: var(--dialogue-bg);
+  border: 4px solid var(--dialogue-border);
+  border-radius: 12px;
+  padding: 30px;
+  margin: 20px auto;
+  font-family: var(--font-pixelify-sans), monospace;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  width: 90%;
+}
+
+/* Pokemon button styling */
+.pokemon-button {
+  background: linear-gradient(135deg, var(--pokemon-blue), var(--pokemon-yellow));
+  border: 3px solid #1e293b;
+  border-radius: 25px;
+  padding: 12px 24px;
+  font-family: var(--font-retro);
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pokemon-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.pokemon-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Ensure background images show properly */
+.bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
 }
