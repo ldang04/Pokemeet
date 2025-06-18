@@ -5,11 +5,18 @@ import { generateTrainerAvatar } from '../utils/openai';
 
 interface UserData {
   name: string;
-  phoneNumber: string;
-  phoneConfirmation: string;
   instagramUsername: string;
   profileImage: File | null;
   generatedAvatar?: string; // URL of the generated avatar
+  resumeFile: File | null;
+  pokemonCards?: PokemonCard[];
+}
+
+interface PokemonCard {
+  id: number;
+  type: string;
+  image_url: string;
+  description: string;
 }
 
 interface DialogueStep {
@@ -44,21 +51,17 @@ const dialogueSteps: DialogueStep[] = [
   },
   {
     id: 'avatar_complete',
-    text: "Looking fantastic! Your Pokemon trainer transformation is complete. Now let's get your contact details so other trainers can connect with you!"
+    text: "Looking fantastic! Your Pokemon trainer transformation is complete. Now let's create your Pokemon team!"
   },
   {
-    id: 'phone',
-    text: "We'll need your phone number so we can let you know when other trainers want to connect with you!",
-    inputType: 'tel',
-    placeholder: 'Enter your phone number...',
-    field: 'phoneNumber'
+    id: 'resume',
+    text: "Upload your resume and we'll generate unique Pokemon cards based on your skills and experience!",
+    inputType: 'file',
+    field: 'resumeFile'
   },
   {
-    id: 'phone_confirm',
-    text: "Just to double-check, could you confirm your phone number for us?",
-    inputType: 'tel',
-    placeholder: 'Confirm your phone number...',
-    field: 'phoneConfirmation'
+    id: 'pokemon_complete',
+    text: "Amazing! Your Pokemon team is ready. Now let's get your Instagram so other trainers can connect with you!"
   },
   {
     id: 'instagram',
@@ -69,23 +72,25 @@ const dialogueSteps: DialogueStep[] = [
   },
   {
     id: 'complete',
-    text: "Amazing! Your trainer profile is all set up. Now let's register your Pokemon for the Pokedex and start meeting other trainers!"
+    text: "Amazing! Your trainer profile is all set up. Time to start meeting other trainers!"
   }
 ];
 
 export default function Home() {
   const [gameStarted, setGameStarted] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [showPokedex, setShowPokedex] = useState(false);
   const [userData, setUserData] = useState<UserData>({
     name: '',
-    phoneNumber: '',
-    phoneConfirmation: '',
     instagramUsername: '',
-    profileImage: null
+    profileImage: null,
+    resumeFile: null
   });
   const [currentInput, setCurrentInput] = useState('');
   const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [isGeneratingPokemon, setIsGeneratingPokemon] = useState(false);
+  const [pokemonError, setPokemonError] = useState<string | null>(null);
 
   // Function to get personalized dialogue text
   const getDialogueText = (step: DialogueStep): string => {
@@ -93,16 +98,19 @@ export default function Home() {
       return `Nice to meet you, ${userData.name}! Time to transform into a Pokemon trainer! Upload your photo and we'll create your personalized Ghibli-style trainer avatar!`;
     }
     if (step.id === 'avatar_complete' && userData.name) {
-      return `Looking fantastic, ${userData.name}! Your Pokemon trainer transformation is complete. Now let's get your contact details so other trainers can connect with you!`;
+      return `Looking fantastic, ${userData.name}! Your Pokemon trainer transformation is complete. Now let's create your Pokemon team!`;
     }
-    if (step.id === 'phone' && userData.name) {
-      return `Great! Now ${userData.name}, we'll need your phone number so we can let you know when other trainers want to connect with you!`;
+    if (step.id === 'resume' && userData.name) {
+      return `Now ${userData.name}, upload your resume and we'll generate unique Pokemon cards based on your skills and experience!`;
+    }
+    if (step.id === 'pokemon_complete' && userData.name) {
+      return `Amazing, ${userData.name}! Your Pokemon team is ready. Now let's get your Instagram so other trainers can connect with you!`;
     }
     if (step.id === 'instagram' && userData.name) {
       return `Almost done, ${userData.name}! What's your Instagram username? This is how you'll connect with your new trainer friends!`;
     }
     if (step.id === 'complete' && userData.name) {
-      return `Amazing, ${userData.name}! Your trainer profile is all set up. Now let's register your Pokemon for the Pokedex and start meeting other trainers!`;
+      return `Amazing, ${userData.name}! Your trainer profile is all set up. Time to start meeting other trainers!`;
     }
     return step.text;
   };
@@ -114,34 +122,97 @@ export default function Home() {
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setUserData(prev => ({
-        ...prev,
-        profileImage: file
-      }));
+      const currentStepData = dialogueSteps[currentStep];
       
-      // Start generating the avatar
-      setIsGeneratingAvatar(true);
-      setAvatarError(null);
-      
-      try {
-        const avatarUrl = await generateTrainerAvatar(file);
+      if (currentStepData.field === 'profileImage') {
         setUserData(prev => ({
           ...prev,
-          generatedAvatar: avatarUrl
+          profileImage: file
         }));
         
-        // Automatically proceed to the next step after avatar generation
-        setTimeout(() => {
-          if (currentStep < dialogueSteps.length - 1) {
-            setCurrentStep(currentStep + 1);
-          }
-        }, 2000); // Wait 2 seconds to show the generated avatar
+        // Use dummy image instead of generating avatar
+        setIsGeneratingAvatar(true);
+        setAvatarError(null);
         
-      } catch (error) {
-        console.error('Avatar generation failed:', error);
-        setAvatarError('Failed to generate trainer avatar. Please try again.');
-      } finally {
-        setIsGeneratingAvatar(false);
+        // Simulate loading and use dummy image
+        setTimeout(() => {
+          setUserData(prev => ({
+            ...prev,
+            generatedAvatar: '/images/pokemontrainerfemale.png'
+          }));
+          setIsGeneratingAvatar(false);
+          
+          // Automatically proceed to the next step after showing dummy avatar
+          setTimeout(() => {
+            if (currentStep < dialogueSteps.length - 1) {
+              setCurrentStep(currentStep + 1);
+            }
+          }, 2000);
+        }, 1000); // Simulate 1 second loading
+        
+        // Commented out actual avatar generation
+        // try {
+        //   const avatarUrl = await generateTrainerAvatar(file);
+        //   setUserData(prev => ({
+        //     ...prev,
+        //     generatedAvatar: avatarUrl
+        //   }));
+        //   
+        //   // Automatically proceed to the next step after avatar generation
+        //   setTimeout(() => {
+        //     if (currentStep < dialogueSteps.length - 1) {
+        //       setCurrentStep(currentStep + 1);
+        //     }
+        //   }, 2000); // Wait 2 seconds to show the generated avatar
+        //   
+        // } catch (error) {
+        //   console.error('Avatar generation failed:', error);
+        //   setAvatarError('Failed to generate trainer avatar. Please try again.');
+        // } finally {
+        //   setIsGeneratingAvatar(false);
+        // }
+      } else if (currentStepData.field === 'resumeFile') {
+        setUserData(prev => ({
+          ...prev,
+          resumeFile: file
+        }));
+        
+        // Start generating Pokemon cards
+        setIsGeneratingPokemon(true);
+        setPokemonError(null);
+        
+        try {
+          const formData = new FormData();
+          formData.append('resume', file);
+
+          const response = await fetch('/api/generate-pokemon', {
+            method: 'POST',
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            setUserData(prev => ({
+              ...prev,
+              pokemonCards: data.pokemon_cards
+            }));
+            
+            // Automatically proceed to the next step after Pokemon generation
+            setTimeout(() => {
+              if (currentStep < dialogueSteps.length - 1) {
+                setCurrentStep(currentStep + 1);
+              }
+            }, 2000);
+          } else {
+            setPokemonError(data.error || 'Failed to generate Pokemon cards');
+          }
+        } catch (error) {
+          console.error('Pokemon generation failed:', error);
+          setPokemonError('Failed to generate Pokemon cards. Please try again.');
+        } finally {
+          setIsGeneratingPokemon(false);
+        }
       }
     }
   };
@@ -159,6 +230,9 @@ export default function Home() {
     
     if (currentStep < dialogueSteps.length - 1) {
       setCurrentStep(currentStep + 1);
+    } else {
+      // If we're at the last step, show the Pokedex
+      setShowPokedex(true);
     }
   };
 
@@ -166,7 +240,12 @@ export default function Home() {
   const canProceed = () => {
     if (!currentDialogue.inputType) return true;
     if (currentDialogue.inputType === 'file') {
-      return userData.profileImage !== null && !isGeneratingAvatar;
+      if (currentDialogue.field === 'profileImage') {
+        return userData.profileImage !== null && !isGeneratingAvatar;
+      }
+      if (currentDialogue.field === 'resumeFile') {
+        return userData.resumeFile !== null && !isGeneratingPokemon;
+      }
     }
     return currentInput.trim() !== '';
   };
@@ -216,6 +295,41 @@ export default function Home() {
     );
   }
 
+  // Show Pokedex screen after all steps are complete
+  if (showPokedex) {
+    return (
+      <div 
+        className="min-h-[80vh] relative flex flex-col items-center justify-center"
+        style={{
+          backgroundImage: 'url(/images/pokemeet-bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        {/* Pokedex Content */}
+        <div className="relative z-10 mt-2 flex flex-col items-center justify-center space-y-8">
+          {/* Massive Pokedex Image */}
+          <img 
+            src="/images/pokedex.png"
+            alt="Pokedex"
+            className="w-96 h-auto drop-shadow-2xl m-0"
+          />
+          
+          {/* Let's Get Swiping Text */}
+          <div className="dialogue-box max-w-md">
+            <p className="text-2xl text-center text-slate-800 font-[family-name:var(--font-pixelify-sans)] font-bold">
+              Let's get swiping!
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
       className="min-h-screen relative"
@@ -244,6 +358,25 @@ export default function Home() {
             />
           </div>
         )}
+
+        {/* Generated Pokemon Cards - positioned behind and to the right */}
+        {userData.pokemonCards && currentStep >= 6 && (
+          <div className="absolute bottom-20 right-8 z-0">
+            <div className="grid grid-cols-1 gap-2 opacity-80">
+              {userData.pokemonCards.slice(0, 3).map((card) => (
+                <img 
+                  key={card.id}
+                  src={card.image_url} 
+                  alt={`${card.type} Pokemon card`}
+                  className="w-20 h-28 rounded border-2 border-yellow-500 object-cover shadow-lg"
+                  style={{
+                    filter: 'drop-shadow(0 0 15px rgba(255, 215, 0, 0.3))'
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
         
         <div className="dialogue-box relative z-20">
           <p className="text-xl leading-relaxed mb-6 text-slate-800 font-[family-name:var(--font-pixelify-sans)] text-center">
@@ -258,44 +391,51 @@ export default function Home() {
                   <div className="relative">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept={currentDialogue.field === 'profileImage' ? 'image/*' : '.pdf'}
                       onChange={handleFileUpload}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       id="file-upload"
-                      disabled={isGeneratingAvatar}
+                      disabled={isGeneratingAvatar || isGeneratingPokemon}
                     />
                     <label 
                       htmlFor="file-upload" 
-                      className={`block p-4 border-2 border-slate-300 rounded-lg w-full bg-white font-[family-name:var(--font-pixelify-sans)] text-center cursor-pointer hover:bg-gray-50 transition-colors ${isGeneratingAvatar ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`block p-4 border-2 border-slate-300 rounded-lg w-full bg-white font-[family-name:var(--font-pixelify-sans)] text-center cursor-pointer hover:bg-gray-50 transition-colors ${(isGeneratingAvatar || isGeneratingPokemon) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      {isGeneratingAvatar 
-                        ? 'Generating Pokemon Trainer Avatar...' 
-                        : userData.profileImage 
-                          ? userData.profileImage.name 
-                          : 'Choose Profile Photo'
-                      }
+                      {currentDialogue.field === 'profileImage' ? (
+                        isGeneratingAvatar 
+                          ? 'Generating Pokemon Trainer Avatar...' 
+                          : userData.profileImage 
+                            ? userData.profileImage.name 
+                            : 'Choose Profile Photo'
+                      ) : (
+                        isGeneratingPokemon 
+                          ? 'Generating Pokemon Cards...' 
+                          : userData.resumeFile 
+                            ? userData.resumeFile.name 
+                            : 'Choose Resume (PDF)'
+                      )}
                     </label>
                   </div>
                   
                   {/* Loading indicator */}
-                  {isGeneratingAvatar && (
+                  {(isGeneratingAvatar || isGeneratingPokemon) && (
                     <div className="text-center">
                       <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                       <p className="text-blue-600 font-semibold font-[family-name:var(--font-pixelify-sans)] mt-2">
-                        Creating your Pokemon trainer avatar...
+                        {isGeneratingAvatar ? 'Creating your Pokemon trainer avatar...' : 'Generating your Pokemon cards...'}
                       </p>
                     </div>
                   )}
                   
                   {/* Error message */}
-                  {avatarError && (
+                  {(avatarError || pokemonError) && (
                     <p className="text-red-600 font-semibold font-[family-name:var(--font-pixelify-sans)] text-center">
-                      ⚠️ {avatarError}
+                      ⚠️ {avatarError || pokemonError}
                     </p>
                   )}
                   
                   {/* Success with avatar preview */}
-                  {userData.generatedAvatar && !isGeneratingAvatar && !avatarError && (
+                  {currentDialogue.field === 'profileImage' && userData.generatedAvatar && !isGeneratingAvatar && !avatarError && (
                     <div className="text-center space-y-3">
                       <p className="text-green-600 font-semibold font-[family-name:var(--font-pixelify-sans)]">
                         ✓ Pokemon trainer avatar generated!
@@ -310,10 +450,37 @@ export default function Home() {
                     </div>
                   )}
                   
+                  {/* Success with Pokemon cards preview */}
+                  {currentDialogue.field === 'resumeFile' && userData.pokemonCards && !isGeneratingPokemon && !pokemonError && (
+                    <div className="text-center space-y-3">
+                      <p className="text-green-600 font-semibold font-[family-name:var(--font-pixelify-sans)]">
+                        ✓ Pokemon cards generated!
+                      </p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {userData.pokemonCards.map((card) => (
+                          <div key={card.id} className="text-center">
+                            <img 
+                              src={card.image_url} 
+                              alt={`${card.type} Pokemon card`}
+                              className="w-20 h-28 rounded border-2 border-yellow-500 object-cover shadow-lg"
+                            />
+                            <p className="text-xs mt-1 font-[family-name:var(--font-pixelify-sans)] capitalize">
+                              {card.type}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Simple success message for file upload only */}
-                  {userData.profileImage && !userData.generatedAvatar && !isGeneratingAvatar && !avatarError && (
+                  {((currentDialogue.field === 'profileImage' && userData.profileImage && !userData.generatedAvatar && !isGeneratingAvatar && !avatarError) ||
+                    (currentDialogue.field === 'resumeFile' && userData.resumeFile && !userData.pokemonCards && !isGeneratingPokemon && !pokemonError)) && (
                     <p className="text-blue-600 font-semibold font-[family-name:var(--font-pixelify-sans)] text-center">
-                      📸 Photo uploaded! Generating trainer avatar...
+                      {currentDialogue.field === 'profileImage' 
+                        ? '📸 Photo uploaded! Generating trainer avatar...'
+                        : '📄 Resume uploaded! Generating Pokemon cards...'
+                      }
                     </p>
                   )}
                 </div>
