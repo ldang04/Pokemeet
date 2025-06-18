@@ -1,4 +1,126 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pokemeet - Pokemon Resume Generator
+
+A Next.js application that generates unique Pokemon cards based on uploaded resume files using OpenAI's DALL-E 3 image generation.
+
+## Features
+
+- Upload PDF resume files
+- Generate 3 unique Pokemon cards representing different aspects of your professional profile:
+  - Cute and friendly Pokemon
+  - Aggressive and powerful Pokemon  
+  - Mysterious and wise Pokemon
+- Each card includes custom abilities based on resume content
+- Modern, responsive UI built with React and Tailwind CSS
+
+## Setup
+
+1. **Install dependencies:**
+   ```bash
+   pnpm install
+   ```
+
+2. **Set up environment variables:**
+   Create a `.env.local` file in the root directory and add your OpenAI API key:
+   ```
+   OPENAI_API_KEY=your_openai_api_key_here
+   ```
+
+3. **Run the development server:**
+   ```bash
+   pnpm dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## API Endpoint
+
+### POST `/api/generate-pokemon`
+
+Generates 3 Pokemon cards based on an uploaded resume file.
+
+**Request:**
+- Method: `POST`
+- Content-Type: `multipart/form-data`
+- Body: FormData with a file field named `resume` (PDF format)
+
+**Response:**
+```json
+{
+  "success": true,
+  "pokemon_cards": [
+    {
+      "id": 1,
+      "type": "cute and friendly",
+      "image_url": "https://oaidalleapiprodscus.blob.core.windows.net/...",
+      "description": "A cute and friendly Pokemon card generated based on your resume"
+    },
+    {
+      "id": 2,
+      "type": "aggressive and powerful",
+      "image_url": "https://oaidalleapiprodscus.blob.core.windows.net/...",
+      "description": "A aggressive and powerful Pokemon card generated based on your resume"
+    },
+    {
+      "id": 3,
+      "type": "mysterious and wise",
+      "image_url": "https://oaidalleapiprodscus.blob.core.windows.net/...",
+      "description": "A mysterious and wise Pokemon card generated based on your resume"
+    }
+  ]
+}
+```
+
+**Error Response:**
+```json
+{
+  "error": "Error message describing what went wrong"
+}
+```
+
+## Usage Example
+
+### Using curl:
+```bash
+curl -X POST http://localhost:3000/api/generate-pokemon \
+  -F "resume=@path/to/your/resume.pdf"
+```
+
+### Using JavaScript fetch:
+```javascript
+const formData = new FormData();
+formData.append('resume', fileInput.files[0]);
+
+const response = await fetch('/api/generate-pokemon', {
+  method: 'POST',
+  body: formData,
+});
+
+const data = await response.json();
+console.log(data.pokemon_cards);
+```
+
+## Technologies Used
+
+- **Next.js 15** - React framework with App Router
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+- **OpenAI API** - GPT Image 1 for image generation
+- **pdf-parse** - PDF text extraction
+- **formidable** - File upload handling
+
+## Notes
+
+- The API uses OpenAI's GPT Image 1 model for image generation
+- PDF text extraction is handled automatically
+- Generated images are hosted by OpenAI and URLs are temporary
+- File size limit: 10MB per upload
+- Supported file format: PDF only
+
+## Requirements
+
+- Node.js 18+
+- OpenAI API key with GPT Image 1 access
+- Internet connection for OpenAI API calls
 
 ## Getting Started
 
