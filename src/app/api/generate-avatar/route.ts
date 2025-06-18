@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { OpenAI } from "openai";
 
 // Initialize OpenAI client on server side
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    // Parse the form data
-    const formData = await request.formData();
-    const imageFile = formData.get('image') as File;
-    
-    if (!imageFile) {
+    // --- 1. pull multipart/form-data
+    const form = await req.formData();
+    const file = form.get("image") as File;
+
+    if (!file) {
       return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
     }
 
-    // Create the prompt for Pokemon trainer transformation
+    // --- 2. Create the prompt for Pokemon trainer transformation
     const prompt = `Transform this person into a Pokemon trainer character in the style of Studio Ghibli animation. The character should have:
     - Ghibli-esque art style with soft, warm colors and gentle shading
-    - Pokemon trainer outfit with vest, backpack, and pokeball accessories  
+    - Pokemon trainer outfit with vest, backpack, and pokeball accessories
     - Anime-style features while maintaining the person's basic likeness
     - Friendly, adventurous expression
     - Age-appropriate Pokemon trainer appearance
@@ -27,25 +27,26 @@ export async function POST(request: NextRequest) {
     - Professional anime character design quality
     - Standing pose ready for adventure`;
 
-    // Use image edit to transform the uploaded photo
+    // --- 3. Use image edit to transform the uploaded photo
     const response = await openai.images.edit({
-      image: imageFile,
+      image: file,
       prompt: prompt,
       n: 1,
       size: "1024x1024",
       response_format: "url"
     });
 
-    // Return the generated image URL
+    // Check if we got a result
     if (response.data && response.data[0] && response.data[0].url) {
       return NextResponse.json({ 
-        success: true, 
+        success: true,
         imageUrl: response.data[0].url,
         prompt: prompt
       });
     } else {
       return NextResponse.json({ error: 'No image generated' }, { status: 500 });
     }
+
   } catch (error) {
     console.error('Error generating trainer avatar:', error);
     
@@ -61,9 +62,9 @@ export async function POST(request: NextRequest) {
           error: 'Image rejected by content policy. Please try a different photo.' 
         }, { status: 400 });
       }
-      if (error.message.includes('invalid_image')) {
+      if (error.message.includes('invalid_image') || error.message.includes('image')) {
         return NextResponse.json({ 
-          error: 'Invalid image format. Please upload a PNG, JPEG, or WebP image.' 
+          error: 'Invalid image format. Please upload a PNG image under 4MB.' 
         }, { status: 400 });
       }
     }
